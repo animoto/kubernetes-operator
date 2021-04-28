@@ -261,36 +261,41 @@ cp -n {{ .InitConfigurationPath }}/*.groovy {{ .JenkinsHomePath }}/init.groovy.d
 mkdir -p {{ .JenkinsHomePath }}/scripts
 cp {{ .JenkinsScriptsVolumePath }}/*.sh {{ .JenkinsHomePath }}/scripts
 chmod +x {{ .JenkinsHomePath }}/scripts/*.sh
+cp -R /usr/share/jenkins/ref/plugins/ {{ .JenkinsHomePath }}/plugins/
+chown -R jenkins:jenkins {{ .JenkinsHomePath }}/plugins/
 
-{{- $jenkinsHomePath := .JenkinsHomePath }}
-{{- $installPluginsCommand := .InstallPluginsCommand }}
+ls -lat $JENKINS_HOME
+ls -lat $JENKINS_HOME/plugins
 
-echo "Installing plugins required by Operator - begin"
-cat > {{ .JenkinsHomePath }}/base-plugins << EOF
-{{ range $index, $plugin := .BasePlugins }}
-{{ $plugin.Name }}:{{ $plugin.Version }}{{if $plugin.DownloadURL}}:{{ $plugin.DownloadURL }}{{end}}
-{{ end }}
-EOF
-
-if [[ -z "${OPENSHIFT_JENKINS_IMAGE_VERSION}" ]]; then
-  {{ $installPluginsCommand }} < {{ .JenkinsHomePath }}/base-plugins
-else
-  {{ $installPluginsCommand }} {{ .JenkinsHomePath }}/base-plugins
-fi
-echo "Installing plugins required by Operator - end"
-
-echo "Installing plugins required by user - begin"
-cat > {{ .JenkinsHomePath }}/user-plugins << EOF
-{{ range $index, $plugin := .UserPlugins }}
-{{ $plugin.Name }}:{{ $plugin.Version }}{{if $plugin.DownloadURL}}:{{ $plugin.DownloadURL }}{{end}}
-{{ end }}
-EOF
-if [[ -z "${OPENSHIFT_JENKINS_IMAGE_VERSION}" ]]; then
-  {{ $installPluginsCommand }} < {{ .JenkinsHomePath }}/user-plugins
-else
-  {{ $installPluginsCommand }} {{ .JenkinsHomePath }}/user-plugins
-fi
-echo "Installing plugins required by user - end"
+# {{- $jenkinsHomePath := .JenkinsHomePath }}
+# {{- $installPluginsCommand := .InstallPluginsCommand }}
+# 
+# echo "Installing plugins required by Operator - begin"
+# cat > {{ .JenkinsHomePath }}/base-plugins << EOF
+# {{ range $index, $plugin := .BasePlugins }}
+# {{ $plugin.Name }}:{{ $plugin.Version }}{{if $plugin.DownloadURL}}:{{ $plugin.DownloadURL }}{{end}}
+# {{ end }}
+# EOF
+# 
+# if [[ -z "${OPENSHIFT_JENKINS_IMAGE_VERSION}" ]]; then
+#   {{ $installPluginsCommand }} < {{ .JenkinsHomePath }}/base-plugins
+# else
+#   {{ $installPluginsCommand }} {{ .JenkinsHomePath }}/base-plugins
+# fi
+# echo "Installing plugins required by Operator - end"
+# 
+# echo "Installing plugins required by user - begin"
+# cat > {{ .JenkinsHomePath }}/user-plugins << EOF
+# {{ range $index, $plugin := .UserPlugins }}
+# {{ $plugin.Name }}:{{ $plugin.Version }}{{if $plugin.DownloadURL}}:{{ $plugin.DownloadURL }}{{end}}
+# {{ end }}
+# EOF
+# if [[ -z "${OPENSHIFT_JENKINS_IMAGE_VERSION}" ]]; then
+#   {{ $installPluginsCommand }} < {{ .JenkinsHomePath }}/user-plugins
+# else
+#   {{ $installPluginsCommand }} {{ .JenkinsHomePath }}/user-plugins
+# fi
+# echo "Installing plugins required by user - end"
 `))
 
 func buildConfigMapTypeMeta() metav1.TypeMeta {
