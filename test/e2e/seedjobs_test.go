@@ -29,57 +29,58 @@ type seedJobConfig struct {
 }
 
 /*
-type seedJobsConfig struct {
-	SeedJobs []seedJobConfig `json:"seedJobs,omitempty"`
-}
+	type seedJobsConfig struct {
+		SeedJobs []seedJobConfig `json:"seedJobs,omitempty"`
+	}
 
 // FIXME
-func TestSeedJobs(t *testing.T) {
-	t.Parallel()
-	if seedJobConfigurationFile == nil || len(*seedJobConfigurationFile) == 0 {
-		t.Skipf("Skipping test because flag '%+v' is not set", seedJobConfigurationFile)
+
+	func TestSeedJobs(t *testing.T) {
+		t.Parallel()
+		if seedJobConfigurationFile == nil || len(*seedJobConfigurationFile) == 0 {
+			t.Skipf("Skipping test because flag '%+v' is not set", seedJobConfigurationFile)
+		}
+		seedJobsConfig := loadSeedJobsConfig(t)
+		namespace, ctx := setupTest(t)
+
+		defer showLogsAndCleanup(t, ctx)
+
+		jenkinsCRName := "e2e"
+		var seedJobs []v1alpha2.SeedJob
+
+		// base
+		for _, seedJobConfig := range seedJobsConfig.SeedJobs {
+			createKubernetesCredentialsProviderSecret(t, namespace, seedJobConfig)
+			seedJobs = append(seedJobs, seedJobConfig.SeedJob)
+		}
+		jenkins := createJenkinsCR(t, jenkinsCRName, namespace, &seedJobs, v1alpha2.GroovyScripts{}, v1alpha2.ConfigurationAsCode{}, "")
+		waitForJenkinsBaseConfigurationToComplete(t, jenkins)
+
+		verifyJenkinsMasterPodAttributes(t, jenkins)
+		jenkinsClient, cleanUpFunc := verifyJenkinsAPIConnection(t, jenkins, namespace)
+		defer cleanUpFunc()
+		verifyPlugins(t, jenkinsClient, jenkins)
+
+		// user
+		waitForJenkinsUserConfigurationToComplete(t, jenkins)
+		verifyJenkinsSeedJobs(t, jenkinsClient, seedJobsConfig.SeedJobs)
 	}
-	seedJobsConfig := loadSeedJobsConfig(t)
-	namespace, ctx := setupTest(t)
 
-	defer showLogsAndCleanup(t, ctx)
+	func loadSeedJobsConfig() seedJobsConfig {
+		//seedJobConfigurationFile = flag.String(seedJobConfigurationParameterName, "", "path to seed job config")
+		jsonFile, err := os.Open(*seedJobConfigurationFile)
+		Expect(err).NotTo(HaveOccurred())
+		defer func() { _ = jsonFile.Close() }()
 
-	jenkinsCRName := "e2e"
-	var seedJobs []v1alpha2.SeedJob
+		byteValue, err := ioutil.ReadAll(jsonFile)
+		Expect(err).NotTo(HaveOccurred())
 
-	// base
-	for _, seedJobConfig := range seedJobsConfig.SeedJobs {
-		createKubernetesCredentialsProviderSecret(t, namespace, seedJobConfig)
-		seedJobs = append(seedJobs, seedJobConfig.SeedJob)
+		var result seedJobsConfig
+		err = json.Unmarshal(byteValue, &result)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(result.SeedJobs).NotTo(BeEmpty())
+		return result
 	}
-	jenkins := createJenkinsCR(t, jenkinsCRName, namespace, &seedJobs, v1alpha2.GroovyScripts{}, v1alpha2.ConfigurationAsCode{}, "")
-	waitForJenkinsBaseConfigurationToComplete(t, jenkins)
-
-	verifyJenkinsMasterPodAttributes(t, jenkins)
-	jenkinsClient, cleanUpFunc := verifyJenkinsAPIConnection(t, jenkins, namespace)
-	defer cleanUpFunc()
-	verifyPlugins(t, jenkinsClient, jenkins)
-
-	// user
-	waitForJenkinsUserConfigurationToComplete(t, jenkins)
-	verifyJenkinsSeedJobs(t, jenkinsClient, seedJobsConfig.SeedJobs)
-}
-
-func loadSeedJobsConfig() seedJobsConfig {
-	//seedJobConfigurationFile = flag.String(seedJobConfigurationParameterName, "", "path to seed job config")
-	jsonFile, err := os.Open(*seedJobConfigurationFile)
-	Expect(err).NotTo(HaveOccurred())
-	defer func() { _ = jsonFile.Close() }()
-
-	byteValue, err := ioutil.ReadAll(jsonFile)
-	Expect(err).NotTo(HaveOccurred())
-
-	var result seedJobsConfig
-	err = json.Unmarshal(byteValue, &result)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(result.SeedJobs).NotTo(BeEmpty())
-	return result
-}
 */
 func createKubernetesCredentialsProviderSecret(namespace string, config seedJobConfig) {
 	if config.JenkinsCredentialType == v1alpha2.NoJenkinsCredentialCredentialType {

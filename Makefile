@@ -395,7 +395,7 @@ ifneq ($(GITUNTRACKEDCHANGES),)
 endif
 ifneq ($(GITIGNOREDBUTTRACKEDCHANGES),)
 	@echo "Ignored but tracked files:"
-	@git ls-files -i --exclude-standard
+	@git ls-files -i -o --exclude-standard
 	@echo
 endif
 	@echo "Dependencies:"
@@ -485,7 +485,9 @@ TMP_DIR=$$(mktemp -d) ;\
 cd $$TMP_DIR ;\
 go mod init tmp ;\
 echo "Downloading $(2)" ;\
-GOBIN=$(PROJECT_DIR)/bin go get $(2) ;\
+echo "JPP test" ;\
+echo $(PROJECT_DIR)/bin ;\
+export GOBIN=$(PROJECT_DIR)/bin; go get $(2) ;\
 rm -rf $$TMP_DIR ;\
 }
 endef

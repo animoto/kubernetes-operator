@@ -10,6 +10,7 @@ require (
 	github.com/go-logr/zapr v0.2.0
 	github.com/golang/mock v1.4.1
 	github.com/mailgun/mailgun-go/v3 v3.6.4
+	github.com/mrtazz/checkmake v0.0.0-20230817110936-bd26d7905e47 // indirect
 	github.com/onsi/ginkgo v1.14.1
 	github.com/onsi/gomega v1.10.2
 	github.com/opencontainers/go-digest v1.0.0 // indirect
